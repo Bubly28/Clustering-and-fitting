@@ -193,3 +193,28 @@ plt.ylabel('Population')
 plt.title('Cluster')
 plt.savefig("Cluster.png", dpi=300)
 plt.show()
+
+#Scatter plot before fitting
+plt.figure(figsize = (8,6))
+plt.scatter(data["Year"], data["CO2 intensity (kg per kg of oil equivalent energy use)"])
+plt.title('Scatter Plot between 1960-2020 before fitting')
+plt.ylabel('CO2 intensity')
+#plt.xlabel('Year')
+plt.savefig("Scatter_fit.png", dpi=300)
+plt.show()
+
+#Fitting
+popt, pcov = opt.curve_fit(Expo, data['Year'],data['CO2 intensity (kg per kg of oil equivalent energy use)'], p0=[1000, 0.02])
+data["Pop"] = Expo(data['Year'], *popt)
+sigma = np.sqrt(np.diag(pcov))
+low, up = err_ranges(data["Year"],Expo,popt,sigma)
+#Plotting the fitted and real data by showing confidence range
+plt.figure()
+plt.title("Plot After Fitting")
+plt.plot(data["Year"], data['CO2 intensity (kg per kg of oil equivalent energy use)'], label="data")
+plt.plot(data["Year"], data["Pop"], label="fit")
+plt.fill_between(data["Year"], low, up, alpha=0.7)
+plt.legend()
+#plt.xlabel("year")
+plt.savefig("Fitting_Graph.png", dpi=300)
+plt.show()
