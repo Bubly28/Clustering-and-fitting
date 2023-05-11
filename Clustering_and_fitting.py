@@ -73,6 +73,42 @@ def map_corr(df, size=6):
     plt.title("Heatmap (Australia)")
     plt.savefig("Heatmap.png", dpi=300)
     # no plt.show() at the end
+    
+def scaler(df):
+    """ 
+    Expects a dataframe and normalises all 
+    columnsto the 0-1 range. It also returns 
+    dataframes with minimum and maximum for
+    transforming the cluster centres
+    """
+
+    # Uses the pandas methods
+    df_min = df.min()
+    df_max = df.max()
+
+    df = (df-df_min) / (df_max - df_min)
+
+    return df, df_min, df_max    
+    
+def n_cluster(data_frame):
+    '''
+    Fuction to find the best number of cluster
+    
+    Input: 
+        data_frame: DataFrame for clustering
+        
+    Output:
+        k_rng: No. of clusters
+        sse: Sum of squared error
+    
+    '''
+    k_rng = range(1,10)
+    sse=[]
+    for k in k_rng:
+      km = KMeans(n_clusters=k)
+      km.fit_predict(data_frame)
+      sse.append(km.inertia_)
+    return k_rng,sse    
 
 #Caling the read function
 data1 =  read_data("climate_change.xlsx")
@@ -109,6 +145,51 @@ plt.show()
 
 #Plotting the scatter matrix
 pd.plotting.scatter_matrix(data_clus, figsize=(12, 12), s=5, alpha=0.8)
-plt.title('Scatter.matrix')
 plt.savefig('Matrix.png', dpi=300)
+plt.show()
+
+df_ex = data_clus[['CO2 intensity','Population']] # extract the two columns for clustering
+df_ex = df_ex.dropna() # entries with one nan are useless
+df_ex = df_ex.reset_index()
+print(df_ex.iloc[0:15])
+# reset_index() moved the old index into column index
+# remove before clustering
+df_ex = df_ex.drop("index", axis=1)
+print(df_ex.iloc[0:15])
+
+
+# normalise, store minimum and maximum
+df_norm, df_min, df_max = scaler(df_ex)
+print()
+
+#No. of clusters, Sum of squared error
+n,s = n_cluster(df_norm)
+plt.xlabel=('no. of clusters')
+plt.ylabel('sum of squared error')
+plt.plot(n,s)
+plt.title('No. of clusters')
+plt.savefig("Elbow_method.png", dpi=300)
+print(s)
+
+#Clustering
+ncluster = 6
+# set up the clusterer with the number of expected clusters
+kmeans = cluster.KMeans(n_clusters=ncluster)
+# Fit the data, results are stored in the kmeans object
+kmeans.fit(df_norm) # fit done on x,y pairs
+labels = kmeans.labels_
+# extract the estimated cluster centres
+cen = kmeans.cluster_centers_
+xcen = cen[:, 0]
+ycen = cen[:, 1]
+# cluster by cluster
+plt.figure(figsize=(8.0, 8.0))
+cm = plt.cm.get_cmap('tab10')
+plt.scatter(df_norm["CO2 intensity"], df_norm["Population"], 10, labels
+,marker="o", cmap=cm)
+plt.scatter(xcen, ycen, 45, "k", marker="d")
+#plt.xlabel('CO2 intensity')
+plt.ylabel('Population')
+plt.title('Cluster')
+plt.savefig("Cluster.png", dpi=300)
 plt.show()
