@@ -48,6 +48,32 @@ def filter_data(df, col, value, yr, ind):
     df3 = df3.dropna(axis = 1)
     return df3
 
+def map_corr(df, size=6):
+    """Function creates heatmap of correlation matrix for each pair of 
+    columns in the dataframe.
+
+    Input:
+        df: pandas DataFrame
+        size: vertical and horizontal size of the plot (in inch)
+        
+    The function does not have a plt.show() at the end so that the user 
+    can savethe figure.
+    """
+
+
+    corr = df.corr()
+    plt.figure(figsize=(size, size))
+    # fig, ax = plt.subplots()
+    plt.matshow(corr, cmap='coolwarm')
+    # setting ticks to column names
+    plt.xticks(range(len(corr.columns)), corr.columns, rotation=90)
+    plt.yticks(range(len(corr.columns)), corr.columns)
+
+    plt.colorbar()
+    plt.title("Heatmap (Australia)")
+    plt.savefig("Heatmap.png", dpi=300)
+    # no plt.show() at the end
+
 #Caling the read function
 data1 =  read_data("climate_change.xlsx")
 warnings.filterwarnings("ignore")
@@ -74,3 +100,15 @@ data_clus = data_clus.rename(columns={
 print(data_clus.head())
 print(data_clus.describe())
 data_clus.corr()
+
+#Checking the correlation
+corr = data_clus.corr()
+print(corr)
+map_corr(data_clus)
+plt.show()
+
+#Plotting the scatter matrix
+pd.plotting.scatter_matrix(data_clus, figsize=(12, 12), s=5, alpha=0.8)
+plt.title('Scatter.matrix')
+plt.savefig('Matrix.png', dpi=300)
+plt.show()
