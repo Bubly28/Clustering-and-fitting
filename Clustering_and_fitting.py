@@ -108,7 +108,42 @@ def n_cluster(data_frame):
       km = KMeans(n_clusters=k)
       km.fit_predict(data_frame)
       sse.append(km.inertia_)
-    return k_rng,sse    
+    return k_rng,sse   
+
+def Expo(t, scale, growth):
+    f = (scale * np.exp(growth * (t-1960)))
+    return f
+
+def func(x,k,l,m):
+    """Function to use for finding error ranges"""
+    k,x,l,m=0,0,0,0
+    return k * np.exp(-(x-l)**2/m)
+
+def err_ranges(x, func, param, sigma):
+    """Function to find error ranges for fitted data
+    x: x array of the data
+    func: defined function above
+    param: parameter found by fitted data
+    sigma: sigma found by fitted data"""
+    import itertools as iter
+    
+    low = func(x, *param)
+    up = low
+    
+    uplow = []
+    for p,s in zip(param, sigma):
+        pmin = p - s
+        pmax = p + s
+        uplow.append((pmin, pmax))
+        
+    pmix = list(iter.product(*uplow))
+    
+    for p in pmix:
+        y = func(x, *p)
+        low = np.minimum(low, y)
+        up = np.maximum(up, y)
+        
+    return low, up
 
 #Caling the read function
 data1 =  read_data("climate_change.xlsx")
@@ -216,5 +251,12 @@ plt.plot(data["Year"], data["Pop"], label="fit")
 plt.fill_between(data["Year"], low, up, alpha=0.7)
 plt.legend()
 #plt.xlabel("year")
+plt.ylabel("CO2 intensity")
 plt.savefig("Fitting_Graph.png", dpi=300)
 plt.show()
+
+#Predicting future values
+low, up = err_ranges(2030,Expo,popt,sigma)
+print("CO2 intensity in 2030 is ", low, "and", up)
+low, up = err_ranges(2040,Expo,popt,sigma)
+print("CO2 intensity in 2040 is ", low, "and", up)
